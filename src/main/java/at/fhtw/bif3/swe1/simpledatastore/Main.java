@@ -1,9 +1,6 @@
 package at.fhtw.bif3.swe1.simpledatastore;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -35,8 +32,10 @@ public class Main {
         try {
             // HTTP: download file from https://www.data.gv.at/katalog/dataset/spielplatze-standorte-wien/resource/d7477bee-cfc3-45c0-96a1-5911e0ae122c
             var data = readStreamAsCsv(new URL(DOWNLOAD_URL).openConnection().getInputStream());
-            data.stream().forEach(System.out::println);
+//            data.stream().forEach(System.out::println);
 
+            var file = new FileWriter( "custom.csv", StandardCharsets.UTF_8 );
+            writeCollectionAsCsv(data, file);
 
         } catch (IOException e) {
             // IGNORED - I promise, I will enter the correct URL in den sourcecode
@@ -174,11 +173,40 @@ public class Main {
                     break;  // EOF
             }
 
+            System.out.printf("Read %d items.\n", list.size());
             return list;
         } catch (IOException e) {
             // IGNORED
             throw new RuntimeException(e);
         }
+    }
+
+    private static void writeCollectionAsCsv(List<PlaygroundPointRecord> data, FileWriter file) {
+        PrintWriter writer = new PrintWriter( file );
+        writer.println("FID,OBJECTID,SHAPE,ANL_NAME,BEZIRK,SPIELPLATZ_DETAIL,TYP_DETAIL,SE_ANNO_CAD_DATA");
+
+        for( var item : data ) {
+            writer.printf("%s,%s,%s,%s,%s,%s,%s,%s\n",
+                    escape(item.fId()),
+                    escape(item.objectId()),
+                    escape(item.shape()),
+                    escape(item.anlName()),
+                    escape(item.bezirk()),
+                    escape(item.spielplatzDetail()),
+                    escape(item.typDetail()),
+                    escape(item.seAnnoCadData()));
+        }
+        writer.flush();
+        writer.close();
+    }
+
+    private static String escape(Object content) {
+        if( content==null )
+            return "";
+        String str = content.toString();
+        if( str.contains(",") )
+            return String.format("\"%s\"", str);
+        return str;
     }
 
 }
