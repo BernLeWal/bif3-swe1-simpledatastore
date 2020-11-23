@@ -1,13 +1,10 @@
 package at.fhtw.bif3.swe1.simpledatastore;
 
 import java.io.*;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Main {
 
@@ -17,11 +14,11 @@ public class Main {
         System.out.println("Init? [Y/n]");
         Scanner sc = new Scanner(System.in);
         var input = sc.nextLine();
-        if ( "y".equalsIgnoreCase(input) ) {
+        if ("y".equalsIgnoreCase(input)) {
             load();
         }
-        
-        //readBinaryData();
+
+        readBinaryData();
     }
 
     /**
@@ -34,8 +31,21 @@ public class Main {
             var data = readStreamAsCsv(new URL(DOWNLOAD_URL).openConnection().getInputStream());
 //            data.stream().forEach(System.out::println);
 
-            var file = new FileWriter( "custom.csv", StandardCharsets.UTF_8 );
+            var file = new FileWriter("custom.csv", StandardCharsets.UTF_8);
             writeCollectionAsCsv(data, file);
+
+            // Query with Stream-API
+            var objectIds = data.stream()
+                    .filter(item -> Objects.nonNull(item.objectId()))
+                    .map(item -> item.objectId())
+                    .collect(Collectors.toList());
+            System.out.println("min objectid: " + Collections.min(objectIds));
+            System.out.println("max objectid: " + Collections.max(objectIds));
+
+            // File handling: preparation for databases (index file)
+            FileOutputStream writeStreamBinary = new FileOutputStream("custom.dat");
+            FileOutputStream writeStreamIndexBinary = new FileOutputStream("custom.idx.dat");
+            writeCollectionAsBinary(data, writeStreamBinary, writeStreamIndexBinary);
 
         } catch (IOException e) {
             // IGNORED - I promise, I will enter the correct URL in den sourcecode
@@ -51,7 +61,7 @@ public class Main {
 
         // first line is the header (we already know and store for debugging purpose)
         try {
-            BufferedReader reader = new BufferedReader( new InputStreamReader( stream, StandardCharsets.UTF_8 ));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
             var header = reader.readLine();
 
             boolean isContentOver = false;
@@ -65,92 +75,57 @@ public class Main {
                 String currentItemTypDetail = null;
                 String currentItemSeAnnoCadData = null;
 
-                for (int partNr=0; partNr<8; partNr++) {
+                for (int partNr = 0; partNr < 8; partNr++) {
                     StringBuilder readPart = new StringBuilder();
                     boolean isPartOver = false;
                     while (!isPartOver) {
-                        char character = (char)reader.read();
-                        if (character == ',')
-                        {
+                        char character = (char) reader.read();
+                        if (character == ',') {
                             isPartOver = true;
-                        }
-                        else if (character == '\r' || character == '\n')
-                        {
+                        } else if (character == '\r' || character == '\n') {
                             reader.mark(1);
-                            char lineFeed = (char)reader.read();
-                            if (lineFeed != '\n')
-                            {
+                            char lineFeed = (char) reader.read();
+                            if (lineFeed != '\n') {
                                 reader.reset(); // equivalent for peek (in C#)
                             }
 
                             isPartOver = true;
-                        }
-                        else if (character == '\"')
-                        {
-                            do
-                            {
-                                character = (char)reader.read();
-                                if (character == -1)
-                                {
+                        } else if (character == '\"') {
+                            do {
+                                character = (char) reader.read();
+                                if (character == -1) {
                                     isPartOver = true;
                                     isContentOver = true;
                                     break;
-                                }
-                                else if (character == '\"')
-                                {
+                                } else if (character == '\"') {
                                     break;
-                                }
-                                else
-                                {
-                                    readPart.append((char)character); // because character is of type int
+                                } else {
+                                    readPart.append(character); // because character is of type int
                                 }
                             } while (character != '\"');
-                        }
-                        else if (character == -1)
-                        {
+                        } else if (character == -1) {
                             isPartOver = true;
                             isContentOver = true;
-                        }
-                        else
-                        {
-                            readPart.append((char)character);
+                        } else {
+                            readPart.append(character);
                         }
                     }
 
-                    if (isContentOver)
-                    {
+                    if (isContentOver) {
                         // last line is not taken over
                         break;
                     }
 
 //                    System.out.println("\t\t" + partNr + ": " + readPart.toString());
-                    switch( partNr ) {
-                        case 0:
-                            currentItemFId = readPart.toString();
-                            break;
-                        case 1:
-                            currentItemObjectId = (readPart.length()==0) ? null : Integer.parseInt(readPart.toString());
-                            if( currentItemObjectId.intValue()==493697 )
-                                System.out.println("*\n");
-                            break;
-                        case 2:
-                            currentItemShape = readPart.toString();
-                            break;
-                        case 3:
-                            currentItemAnlName = readPart.toString();
-                            break;
-                        case 4:
-                            currentItemBezirk = (readPart.length()==0) ? null : Integer.parseInt( readPart.toString() );
-                            break;
-                        case 5:
-                            currentItemSpielplatzDetail = readPart.toString();
-                            break;
-                        case 6:
-                            currentItemTypDetail = readPart.toString();
-                            break;
-                        case 7:
-                            currentItemSeAnnoCadData = readPart.toString();
-                            break;
+                    switch (partNr) {
+                        case 0 -> currentItemFId = readPart.toString();
+                        case 1 -> currentItemObjectId = (readPart.length() == 0) ? null : Integer.parseInt(readPart.toString());
+                        case 2 -> currentItemShape = readPart.toString();
+                        case 3 -> currentItemAnlName = readPart.toString();
+                        case 4 -> currentItemBezirk = (readPart.length() == 0) ? null : Integer.parseInt(readPart.toString());
+                        case 5 -> currentItemSpielplatzDetail = readPart.toString();
+                        case 6 -> currentItemTypDetail = readPart.toString();
+                        case 7 -> currentItemSeAnnoCadData = readPart.toString();
                     }
 
                 }
@@ -169,7 +144,7 @@ public class Main {
 //                    System.out.println(record);
                 }
 
-                if( !reader.ready() )
+                if (!reader.ready())
                     break;  // EOF
             }
 
@@ -182,10 +157,10 @@ public class Main {
     }
 
     private static void writeCollectionAsCsv(List<PlaygroundPointRecord> data, FileWriter file) {
-        PrintWriter writer = new PrintWriter( file );
+        PrintWriter writer = new PrintWriter(file);
         writer.println("FID,OBJECTID,SHAPE,ANL_NAME,BEZIRK,SPIELPLATZ_DETAIL,TYP_DETAIL,SE_ANNO_CAD_DATA");
 
-        for( var item : data ) {
+        for (var item : data) {
             writer.printf("%s,%s,%s,%s,%s,%s,%s,%s\n",
                     escape(item.fId()),
                     escape(item.objectId()),
@@ -201,12 +176,42 @@ public class Main {
     }
 
     private static String escape(Object content) {
-        if( content==null )
+        if (content == null)
             return "";
         String str = content.toString();
-        if( str.contains(",") )
+        if (str.contains(","))
             return String.format("\"%s\"", str);
         return str;
+    }
+
+    private static void writeCollectionAsBinary(List<PlaygroundPointRecord> data, FileOutputStream outputStream, FileOutputStream indexOutputStream) {
+        DataOutputStream writer = new DataOutputStream( outputStream );
+        DataOutputStream indexWriter = new DataOutputStream(indexOutputStream);
+
+        try {
+            for (var item : data) {
+                if (item.objectId() != null) {
+                    indexWriter.writeLong(writer.size());
+                    indexWriter.writeInt(item.objectId());
+                }
+                writer.write( item.fId().getBytes( StandardCharsets.UTF_8 ) );
+                writer.writeBoolean( item.objectId()!=null );
+                writer.writeInt( ( item.objectId()!=null ) ? item.objectId() : 0);
+                writer.write( item.shape().getBytes( StandardCharsets.UTF_8 ) );
+                writer.write( item.anlName().getBytes( StandardCharsets.UTF_8 ) );
+                writer.writeBoolean( item.bezirk()!=null );
+                writer.writeInt( ( item.bezirk()!=null ) ? item.bezirk() : 0);
+                writer.write( item.spielplatzDetail().getBytes( StandardCharsets.UTF_8 ) );
+                writer.write( item.typDetail().getBytes( StandardCharsets.UTF_8 ) );
+                writer.write( item.seAnnoCadData().getBytes( StandardCharsets.UTF_8 ));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private static void readBinaryData() {
     }
 
 }
