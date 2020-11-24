@@ -31,8 +31,8 @@ public class Main {
             var data = readStreamAsCsv(new URL(DOWNLOAD_URL).openConnection().getInputStream());
 //            data.stream().forEach(System.out::println);
 
-            var file = new FileWriter("custom.csv", StandardCharsets.UTF_8);
-            writeCollectionAsCsv(data, file);
+            var file = new File("custom.csv");
+            writeCollectionAsCsv(data, new PrintStream(file));
 
             // Query with Stream-API
             var objectIds = data.stream()
@@ -156,7 +156,7 @@ public class Main {
         }
     }
 
-    private static void writeCollectionAsCsv(List<PlaygroundPointRecord> data, FileWriter file) {
+    private static void writeCollectionAsCsv(List<PlaygroundPointRecord> data, PrintStream file) {
         PrintWriter writer = new PrintWriter(file);
         writer.println("FID,OBJECTID,SHAPE,ANL_NAME,BEZIRK,SPIELPLATZ_DETAIL,TYP_DETAIL,SE_ANNO_CAD_DATA");
 
@@ -172,7 +172,6 @@ public class Main {
                     escape(item.seAnnoCadData()));
         }
         writer.flush();
-        writer.close();
     }
 
     private static String escape(Object content) {
@@ -185,33 +184,80 @@ public class Main {
     }
 
     private static void writeCollectionAsBinary(List<PlaygroundPointRecord> data, FileOutputStream outputStream, FileOutputStream indexOutputStream) {
-        DataOutputStream writer = new DataOutputStream( outputStream );
-        DataOutputStream indexWriter = new DataOutputStream(indexOutputStream);
-
-        try {
+        try (DataOutputStream writer = new DataOutputStream( outputStream );
+             DataOutputStream indexWriter = new DataOutputStream(indexOutputStream) )
+        {
             for (var item : data) {
                 if (item.objectId() != null) {
                     indexWriter.writeLong(writer.size());
                     indexWriter.writeInt(item.objectId());
                 }
-                writer.write( item.fId().getBytes( StandardCharsets.UTF_8 ) );
+                writer.writeUTF( item.fId() );
                 writer.writeBoolean( item.objectId()!=null );
                 writer.writeInt( ( item.objectId()!=null ) ? item.objectId() : 0);
-                writer.write( item.shape().getBytes( StandardCharsets.UTF_8 ) );
-                writer.write( item.anlName().getBytes( StandardCharsets.UTF_8 ) );
+                writer.writeUTF( item.shape() );
+                writer.writeUTF( item.anlName() );
                 writer.writeBoolean( item.bezirk()!=null );
                 writer.writeInt( ( item.bezirk()!=null ) ? item.bezirk() : 0);
-                writer.write( item.spielplatzDetail().getBytes( StandardCharsets.UTF_8 ) );
-                writer.write( item.typDetail().getBytes( StandardCharsets.UTF_8 ) );
-                writer.write( item.seAnnoCadData().getBytes( StandardCharsets.UTF_8 ));
+                writer.writeUTF( item.spielplatzDetail() );
+                writer.writeUTF( item.typDetail() );
+                writer.writeUTF( item.seAnnoCadData());
             }
+            writer.flush();
+            indexWriter.flush();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
+
 
     }
 
     private static void readBinaryData() {
+        System.out.println("Enter an object id: ");
+        Scanner sc = new Scanner(System.in);
+        var searchObjectId = sc.nextInt();
+
+        FileInputStream binaryStream;
+        FileInputStream binaryIndexStream;
+        try {
+            binaryStream = new FileInputStream("custom.dat");
+            binaryIndexStream = new FileInputStream("custom.idx.dat");
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+        try ( DataInputStream reader = new DataInputStream( binaryStream );
+            DataInputStream indexReader = new DataInputStream( binaryIndexStream ) )
+        {
+            while ( indexReader.available()>0 ) {
+                var position = indexReader.readLong();
+                var objectId = indexReader.readInt();
+
+                if (objectId!=searchObjectId) {
+                    continue;
+                }
+
+                System.out.printf("found at position: %d\n", position);
+                reader.skipBytes((int)position);
+
+                var currentItem = new PlaygroundPointRecord(
+                        reader.readUTF(),
+                        (reader.readBoolean() ? Integer.valueOf(reader.readInt()) : null),
+                        reader.readUTF(),
+                        reader.readUTF(),
+                        (reader.readBoolean() ? Integer.valueOf(reader.readInt()) : null),
+                        reader.readUTF(),
+                        reader.readUTF(),
+                        reader.readUTF()
+                );
+//                System.out.println(currentItem);
+                List<PlaygroundPointRecord> list = new ArrayList<>();
+                list.add(currentItem);
+                writeCollectionAsCsv(list, System.out );
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }
