@@ -1,7 +1,6 @@
 package at.fhtw.bif3.swe1.simpledatastore;
 
 import java.io.*;
-import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -29,11 +28,13 @@ public class Main {
     private void loadDataFromWeb() {
         try {
             // HTTP: download file from https://www.data.gv.at/katalog/dataset/spielplatze-standorte-wien/resource/d7477bee-cfc3-45c0-96a1-5911e0ae122c
-            data = DataStoreText.readCsv(new URL(DOWNLOAD_URL).openConnection().getInputStream());
+            DataStoreCsv dsCsv = new DataStoreCsv();
+            dsCsv.openReadUrl(DOWNLOAD_URL);
+            data = dsCsv.read();
 //            data.stream().forEach(System.out::println);
 
-            var file = new File("custom.csv");
-            DataStoreText.writeCsv(data, new PrintStream(file));
+            dsCsv.openWriteFile("custom.csv");
+            dsCsv.write(data);
 
             // Query with Stream-API
             var objectIds = data.stream()
@@ -44,7 +45,10 @@ public class Main {
             System.out.println("max objectid: " + Collections.max(objectIds));
 
             // File handling: preparation for databases (index file)
-            DataStoreBinary.writeBinary(data, new FileOutputStream("custom.dat"), new FileOutputStream("custom.idx.dat"));
+            DataStoreBinary dsBin = new DataStoreBinary();
+            dsBin.openWriteFile("custom.dat");
+            dsBin.openWriteIndexFile("custom.idx.dat");
+            dsBin.write(data);
 
         } catch (IOException e) {
             // IGNORED - I promise, I will enter the correct URL in den sourcecode
@@ -58,8 +62,14 @@ public class Main {
         var searchObjectId = sc.nextInt();
 
         try {
-            data = DataStoreBinary.readBinary(searchObjectId, new FileInputStream("custom.dat"), new FileInputStream("custom.idx.dat"));
-            DataStoreText.writeCsv(data, System.out );
+            DataStoreBinary dsBinary = new DataStoreBinary();
+            dsBinary.openReadFile("custom.dat");
+            dsBinary.openReadIndexFile("custom.idx.dat");
+            data = dsBinary.read(searchObjectId);
+
+            DataStoreCsv dsCsv = new DataStoreCsv();
+            dsCsv.openWriteConsole();
+            dsCsv.write(data);
         } catch (FileNotFoundException e) {
             // IGNORED - I swear I will use the correct filenames ;-)
             throw new RuntimeException(e);

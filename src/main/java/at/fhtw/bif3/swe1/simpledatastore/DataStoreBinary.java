@@ -4,10 +4,22 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DataStoreBinary {
-    public static void writeBinary(List<PlaygroundPointRecord> data, FileOutputStream outputStream, FileOutputStream indexOutputStream) {
-        try (DataOutputStream writer = new DataOutputStream( outputStream );
-             DataOutputStream indexWriter = new DataOutputStream(indexOutputStream) )
+public class DataStoreBinary extends AbstractDataStore {
+    private InputStream indexInput;
+    private OutputStream indexOutput;
+
+    public void openWriteIndexFile(String filename) throws FileNotFoundException {
+        indexOutput = new FileOutputStream(filename);
+    }
+
+    public void openReadIndexFile(String filename) throws FileNotFoundException {
+        indexInput = new FileInputStream(filename);
+    }
+
+    @Override
+    public void write(List<PlaygroundPointRecord> data) {
+        try (DataOutputStream writer = new DataOutputStream( output );
+             DataOutputStream indexWriter = new DataOutputStream(indexOutput) )
         {
             for (var item : data) {
                 if (item.objectId() != null) {
@@ -32,11 +44,11 @@ public class DataStoreBinary {
         }
     }
 
-    public static List<PlaygroundPointRecord> readBinary(int searchObjectId, FileInputStream binaryStream, FileInputStream binaryIndexStream) {
+    public List<PlaygroundPointRecord> read(int searchObjectId) {
         List<PlaygroundPointRecord> data = new ArrayList<>();
 
-        try (DataInputStream reader = new DataInputStream(binaryStream);
-             DataInputStream indexReader = new DataInputStream(binaryIndexStream) )
+        try (DataInputStream reader = new DataInputStream(input);
+             DataInputStream indexReader = new DataInputStream(indexInput) )
         {
             while ( indexReader.available()>0 ) {
                 var position = indexReader.readLong();
@@ -68,6 +80,11 @@ public class DataStoreBinary {
             throw new RuntimeException(e);
         }
         return data;
+    }
+
+    @Override
+    public List<PlaygroundPointRecord> read() {
+        return read(0);
     }
 
 }

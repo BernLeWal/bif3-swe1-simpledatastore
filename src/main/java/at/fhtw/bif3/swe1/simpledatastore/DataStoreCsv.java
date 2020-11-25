@@ -5,16 +5,17 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DataStoreText {
+public class DataStoreCsv extends AbstractDataStore {
     /**
      * Reads the data from the stream in csv format and maps it to a list of objects (ORMapper).
      */
-    public static List<PlaygroundPointRecord> readCsv(InputStream stream) {
+    @Override
+    public List<PlaygroundPointRecord> read() {
         ArrayList<PlaygroundPointRecord> list = new ArrayList<>();
 
         // first line is the header (we already know and store for debugging purpose)
         try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8));
             var header = reader.readLine();
 
             boolean isContentOver = false;
@@ -109,8 +110,9 @@ public class DataStoreText {
         }
     }
 
-    public static void writeCsv(List<PlaygroundPointRecord> data, PrintStream file) {
-        PrintWriter writer = new PrintWriter(file);
+    @Override
+    public void write(List<PlaygroundPointRecord> data) {
+        PrintWriter writer = new PrintWriter(output);
         writer.println("FID,OBJECTID,SHAPE,ANL_NAME,BEZIRK,SPIELPLATZ_DETAIL,TYP_DETAIL,SE_ANNO_CAD_DATA");
 
         for (var item : data) {
