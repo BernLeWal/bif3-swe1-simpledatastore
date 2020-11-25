@@ -1,8 +1,9 @@
 package at.fhtw.bif3.swe1.simpledatastore;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class PlaygroundPoint {
+public class PlaygroundPoint implements Serializable {
     private final String fId;
     private final Integer objectId;
     private final String shape;

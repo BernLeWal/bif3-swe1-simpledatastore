@@ -16,34 +16,6 @@ public class DataStoreBinary extends AbstractDataStore {
         indexInput = new FileInputStream(filename);
     }
 
-    @Override
-    public void write(List<PlaygroundPointRecord> data) {
-        try (DataOutputStream writer = new DataOutputStream( output );
-             DataOutputStream indexWriter = new DataOutputStream(indexOutput) )
-        {
-            for (var item : data) {
-                if (item.objectId() != null) {
-                    indexWriter.writeLong(writer.size());
-                    indexWriter.writeInt(item.objectId());
-                }
-                writer.writeUTF( item.fId() );
-                writer.writeBoolean( item.objectId()!=null );
-                writer.writeInt( ( item.objectId()!=null ) ? item.objectId() : 0);
-                writer.writeUTF( item.shape() );
-                writer.writeUTF( item.anlName() );
-                writer.writeBoolean( item.bezirk()!=null );
-                writer.writeInt( ( item.bezirk()!=null ) ? item.bezirk() : 0);
-                writer.writeUTF( item.spielplatzDetail() );
-                writer.writeUTF( item.typDetail() );
-                writer.writeUTF( item.seAnnoCadData());
-            }
-            writer.flush();
-            indexWriter.flush();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public List<PlaygroundPointRecord> read(int searchObjectId) {
         List<PlaygroundPointRecord> data = new ArrayList<>();
 
@@ -85,6 +57,34 @@ public class DataStoreBinary extends AbstractDataStore {
     @Override
     public List<PlaygroundPointRecord> read() {
         return read(0);
+    }
+
+    @Override
+    public void write(List<PlaygroundPointRecord> data) {
+        try (DataOutputStream writer = new DataOutputStream( output );
+             DataOutputStream indexWriter = new DataOutputStream(indexOutput) )
+        {
+            for (var item : data) {
+                if (item.objectId() != null) {
+                    indexWriter.writeLong(writer.size());
+                    indexWriter.writeInt(item.objectId());
+                }
+                writer.writeUTF( item.fId() );
+                writer.writeBoolean( item.objectId()!=null );
+                writer.writeInt( ( item.objectId()!=null ) ? item.objectId() : 0);
+                writer.writeUTF( item.shape() );
+                writer.writeUTF( item.anlName() );
+                writer.writeBoolean( item.bezirk()!=null );
+                writer.writeInt( ( item.bezirk()!=null ) ? item.bezirk() : 0);
+                writer.writeUTF( item.spielplatzDetail() );
+                writer.writeUTF( item.typDetail() );
+                writer.writeUTF( item.seAnnoCadData());
+            }
+            writer.flush();
+            indexWriter.flush();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

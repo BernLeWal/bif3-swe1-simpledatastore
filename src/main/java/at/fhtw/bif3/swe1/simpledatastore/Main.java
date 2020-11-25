@@ -15,7 +15,7 @@ public class Main {
         Scanner sc = new Scanner(System.in);
         var input = sc.nextLine();
         if ("y".equalsIgnoreCase(input)) {
-            loadDataFromWeb();
+            loadAndStoreDataFromWeb();
         }
 
         readAndQueryBinaryData();
@@ -25,7 +25,7 @@ public class Main {
      * Loads austrian open data from the website, parses the data and serializes it in different formats
      * based on an internal mapping.
      */
-    private void loadDataFromWeb() {
+    private void loadAndStoreDataFromWeb() {
         try {
             // HTTP: download file from https://www.data.gv.at/katalog/dataset/spielplatze-standorte-wien/resource/d7477bee-cfc3-45c0-96a1-5911e0ae122c
             DataStoreCsv dsCsv = new DataStoreCsv();
@@ -50,6 +50,11 @@ public class Main {
             dsBin.openWriteIndexFile("custom.idx.dat");
             dsBin.write(data);
 
+            // Object handling
+            DataStoreObject dsObject = new DataStoreObject();
+            dsObject.openWriteFile("custom.obj");
+            dsObject.write(data);
+
         } catch (IOException e) {
             // IGNORED - I promise, I will enter the correct URL in den sourcecode
             throw new RuntimeException(e);
@@ -62,10 +67,14 @@ public class Main {
         var searchObjectId = sc.nextInt();
 
         try {
-            DataStoreBinary dsBinary = new DataStoreBinary();
-            dsBinary.openReadFile("custom.dat");
-            dsBinary.openReadIndexFile("custom.idx.dat");
-            data = dsBinary.read(searchObjectId);
+//            DataStoreBinary dsBinary = new DataStoreBinary();
+//            dsBinary.openReadFile("custom.dat");
+//            dsBinary.openReadIndexFile("custom.idx.dat");
+//            data = dsBinary.read(searchObjectId);
+
+            DataStoreObject dsObject = new DataStoreObject();
+            dsObject.openReadFile("custom.obj");
+            data = dsObject.read();
 
             DataStoreCsv dsCsv = new DataStoreCsv();
             dsCsv.openWriteConsole();

@@ -1,5 +1,7 @@
 package at.fhtw.bif3.swe1.simpledatastore;
 
+import java.io.Serializable;
+
 /**
  * Implementation of a PlaygroundPoint with Java15-Preview Feature: record
  * Background info: https://jax.de/blog/datenklassen-in-java-einfuehrung-in-java-records/
@@ -13,5 +15,5 @@ public record PlaygroundPointRecord(
         Integer bezirk,
         String spielplatzDetail,
         String typDetail,
-        String seAnnoCadData) {
+        String seAnnoCadData) implements Serializable {
 }
