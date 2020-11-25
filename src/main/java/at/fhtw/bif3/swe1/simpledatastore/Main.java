@@ -8,7 +8,7 @@ public class Main {
 
     public static final String DOWNLOAD_URL = "https://data.wien.gv.at/daten/geo?service=WFS&request=GetFeature&version=1.1.0&typeName=ogdwien:SPIELPLATZPUNKTOGD&srsName=EPSG:4326&outputFormat=csv";
 
-    protected List<PlaygroundPointRecord> data;
+    private List<PlaygroundPointRecord> data;
 
     public void run() {
         System.out.println("Init? [Y/n]");
@@ -21,18 +21,22 @@ public class Main {
             writeDataToBinaryFile();
             writeDataToObjectBinaryFile();
             writeDataToJSONFile();
+            writeDataToXMLFile();
         }
 
         System.out.println("Enter an object id: ");
         var searchObjectId = sc.nextInt();
 
-        readDataFromBinaryFile(searchObjectId);
-        readDataFromObjectBinaryFile(searchObjectId);
-        readDataFromJSONFile(searchObjectId);
+        //readDataFromBinaryFile(searchObjectId);
+        //readDataFromObjectBinaryFile(searchObjectId);
+        //readDataFromJSONFile(searchObjectId);
+        readDataFromXMLFile(searchObjectId);
 
-        DataStoreCsv dsCsv = new DataStoreCsv();
-        dsCsv.openWriteConsole();
-        dsCsv.write(data);
+        if( data!=null && data.size() > 0 ) {
+            DataStoreCsv dsCsv = new DataStoreCsv();
+            dsCsv.openWriteConsole();
+            dsCsv.write(data);
+        }
     }
 
     /**
@@ -107,8 +111,19 @@ public class Main {
             // IGNORED
             throw new RuntimeException(e);
         }
-
     }
+
+    private void writeDataToXMLFile() {
+        try {
+            DataStoreXML dsXML = new DataStoreXML();
+            dsXML.openWriteFile("custom.xml");
+            dsXML.write(data);
+        } catch (FileNotFoundException e) {
+            // IGNORED
+            throw new RuntimeException(e);
+        }
+    }
+
 
 
     private void readDataFromBinaryFile(int searchObjectId) {
@@ -143,16 +158,39 @@ public class Main {
             DataStoreJSON dsJSON = new DataStoreJSON();
             dsJSON.openReadFile("custom.json");
 
-            List<PlaygroundPointData> data = dsJSON.readData();
+            List<PlaygroundPointData> data2 = dsJSON.readData();
             if( searchObjectId>0 ) {
-                data = data.stream().filter(item -> item.getObjectId().equals(searchObjectId)).collect(Collectors.toList());
+                data2 = data2.stream()
+                        .filter(item -> item.getObjectId().equals(searchObjectId))
+                        .collect(Collectors.toList());
             }
-            data.forEach(System.out::println);
+            data2.forEach(System.out::println);
+            data = null;
         } catch (FileNotFoundException e) {
             // IGNORED - I swear I will use the correct filenames ;-)
             throw new RuntimeException(e);
         }
     }
+
+    private void readDataFromXMLFile(int searchObjectId) {
+        try {
+            DataStoreXML dsXML = new DataStoreXML();
+            dsXML.openReadFile("custom.xml");
+
+            List<PlaygroundPointData> data2 = dsXML.readData();
+            if( searchObjectId>0 ) {
+                data2 = data2.stream()
+                        .filter(item -> item.getObjectId().equals(searchObjectId))
+                        .collect(Collectors.toList());
+            }
+            data2.forEach(System.out::println);
+            data = null;
+        } catch (FileNotFoundException e) {
+            // IGNORED - I swear I will use the correct filenames ;-)
+            throw new RuntimeException(e);
+        }
+    }
+
 
 
     public static void main(String[] args) {
