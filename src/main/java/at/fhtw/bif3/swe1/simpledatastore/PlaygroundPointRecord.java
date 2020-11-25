@@ -15,5 +15,6 @@ public record PlaygroundPointRecord(
         Integer bezirk,
         String spielplatzDetail,
         String typDetail,
-        String seAnnoCadData) implements Serializable {
+        String seAnnoCadData) implements Serializable /* necessary for Object-Streams */
+{
 }
