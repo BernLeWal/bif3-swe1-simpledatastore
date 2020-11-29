@@ -36,8 +36,8 @@
         <java.version>15</java.version>
         <lombok-version>1.18.12</lombok-version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>${java.version}</maven.compiler.source>
-        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <maven.compiler.source>15</maven.compiler.source>
+        <maven.compiler.target>15</maven.compiler.target>
     </properties>
 
     <build>
@@ -47,9 +47,9 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
-                    <release>${java.version}</release>
+                    <source>15</source>
+                    <target>15</target>
+                    <release>15</release>
                     <compilerArgs>--enable-preview</compilerArgs>
                 </configuration>
             </plugin>

@@ -1,9 +1,11 @@
-package at.fhtw.bif3.swe1.simpledatastore;
+package at.fhtw.bif3.swe1.simpledatastore.model;
 
 import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Optional;
+
+// https://projectlombok.org/features/Data
 
 @Data
 public class PlaygroundPointData implements Serializable {
