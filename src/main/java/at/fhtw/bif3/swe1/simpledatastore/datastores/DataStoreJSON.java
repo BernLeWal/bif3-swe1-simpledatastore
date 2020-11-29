@@ -1,5 +1,7 @@
-package at.fhtw.bif3.swe1.simpledatastore;
+package at.fhtw.bif3.swe1.simpledatastore.datastores;
 
+import at.fhtw.bif3.swe1.simpledatastore.model.PlaygroundPointData;
+import at.fhtw.bif3.swe1.simpledatastore.model.PlaygroundPointRecord;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.type.TypeReference;
