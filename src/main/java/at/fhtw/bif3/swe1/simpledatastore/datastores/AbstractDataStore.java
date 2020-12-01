@@ -1,7 +1,8 @@
-package at.fhtw.bif3.swe1.simpledatastore;
+package at.fhtw.bif3.swe1.simpledatastore.datastores;
+
+import at.fhtw.bif3.swe1.simpledatastore.model.PlaygroundPointRecord;
 
 import java.io.*;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 

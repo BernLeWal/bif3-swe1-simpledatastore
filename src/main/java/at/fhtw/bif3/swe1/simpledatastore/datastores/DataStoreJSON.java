@@ -1,28 +1,19 @@
-package at.fhtw.bif3.swe1.simpledatastore;
+package at.fhtw.bif3.swe1.simpledatastore.datastores;
 
+import at.fhtw.bif3.swe1.simpledatastore.datastores.AbstractDataStore;
+import at.fhtw.bif3.swe1.simpledatastore.model.PlaygroundPointData;
+import at.fhtw.bif3.swe1.simpledatastore.model.PlaygroundPointRecord;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DataStoreXML extends AbstractDataStore {
-
-    /**
-     * Helper class to define the names of the XML-elements
-     */
-    public static class PlaygroundPoints {
-        @JacksonXmlElementWrapper(useWrapping = false)
-        @JacksonXmlProperty(localName = "PlaygroundPoint")
-        public List<PlaygroundPointRecord> records;
-    }
-
+public class DataStoreJSON extends AbstractDataStore {
     @Override
     public List<PlaygroundPointRecord> read() {
         // !!!!! unfortunately Jackson library does not support records
@@ -31,21 +22,18 @@ public class DataStoreXML extends AbstractDataStore {
 
     @Override
     public void write(List<PlaygroundPointRecord> data) {
-        PlaygroundPoints serializedData = new PlaygroundPoints();
-        serializedData.records = data;
-
-        XmlMapper mapper = new XmlMapper();
+        ObjectMapper mapper = new ObjectMapper();
         mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
         try {
-            mapper.writeValue(output, serializedData);
+            mapper.writeValue(output, data);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     public List<PlaygroundPointData> readData() {
-        XmlMapper mapper = new XmlMapper();
+        ObjectMapper mapper = new ObjectMapper();
         mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
         try {
             return mapper.readValue(input, new TypeReference<ArrayList<PlaygroundPointData>>(){} );

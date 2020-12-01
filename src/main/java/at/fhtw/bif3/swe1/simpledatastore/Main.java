@@ -1,5 +1,9 @@
 package at.fhtw.bif3.swe1.simpledatastore;
 
+import at.fhtw.bif3.swe1.simpledatastore.datastores.*;
+import at.fhtw.bif3.swe1.simpledatastore.model.PlaygroundPointData;
+import at.fhtw.bif3.swe1.simpledatastore.model.PlaygroundPointRecord;
+
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -27,10 +31,10 @@ public class Main {
         System.out.println("Enter an object id: ");
         var searchObjectId = sc.nextInt();
 
-        //readDataFromBinaryFile(searchObjectId);
+        readDataFromBinaryFile(searchObjectId);
         //readDataFromObjectBinaryFile(searchObjectId);
         //readDataFromJSONFile(searchObjectId);
-        readDataFromXMLFile(searchObjectId);
+        //readDataFromXMLFile(searchObjectId);
 
         if( data!=null && data.size() > 0 ) {
             DataStoreCsv dsCsv = new DataStoreCsv();

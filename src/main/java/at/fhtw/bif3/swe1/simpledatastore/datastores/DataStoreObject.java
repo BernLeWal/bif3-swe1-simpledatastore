@@ -1,4 +1,7 @@
-package at.fhtw.bif3.swe1.simpledatastore;
+package at.fhtw.bif3.swe1.simpledatastore.datastores;
+
+import at.fhtw.bif3.swe1.simpledatastore.datastores.AbstractDataStore;
+import at.fhtw.bif3.swe1.simpledatastore.model.PlaygroundPointRecord;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -11,9 +14,7 @@ public class DataStoreObject extends AbstractDataStore {
         try (ObjectInputStream reader = new ObjectInputStream(input) )
         {
             return (List<PlaygroundPointRecord>) reader.readObject();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (ClassNotFoundException e) {
+        } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
     }

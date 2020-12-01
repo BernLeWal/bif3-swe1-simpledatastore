@@ -1,4 +1,7 @@
-package at.fhtw.bif3.swe1.simpledatastore;
+package at.fhtw.bif3.swe1.simpledatastore.datastores;
+
+import at.fhtw.bif3.swe1.simpledatastore.datastores.AbstractDataStore;
+import at.fhtw.bif3.swe1.simpledatastore.model.PlaygroundPointRecord;
 
 import java.io.*;
 import java.util.ArrayList;
