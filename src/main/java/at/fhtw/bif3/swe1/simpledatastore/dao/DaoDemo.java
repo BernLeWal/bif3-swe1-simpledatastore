@@ -8,7 +8,10 @@ public class DaoDemo {
     private static Dao<PlaygroundPointData> dao;
 
     public static void main(String[] args) {
-        dao = new PlaygroundPointDaoMemory();
+//        dao = new PlaygroundPointDaoMemory();
+        dao = new PlaygroundPointDaoDb();
+        PlaygroundPointDaoDb.initDb();
+
         dao.save(new PlaygroundPointData("SPIELPLATZPUNKTOGD.fid-339f4d3f_1762344675f_1e5a",501013,"POINT (16.403510034695213 48.16441803068401)","PA Löwygrube",10,"\"Fußball, Klettern, Rutschen, Schaukeln, Seilbahn, Spielhaus, Wippen\"","\"Ballspielplatz, Kleinkinderspielplatz, Spielplatz\"",""));
         dao.save(new PlaygroundPointData("SPIELPLATZPUNKTOGD.fid-339f4d3f_1762344675f_1e5b",501014,"POINT (16.390483694249703 48.21002482784035)","Ida-Bohatta-Park",3,"\"Balancieren, Basketball, Fußball, Klettern, Reck, Rutschen, Schaukeln\"","\"Ballspielkäfig, Spielplatz\"",""));
 
