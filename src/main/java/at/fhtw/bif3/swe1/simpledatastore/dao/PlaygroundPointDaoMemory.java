@@ -24,6 +24,7 @@ public class PlaygroundPointDaoMemory implements Dao<PlaygroundPointData> {
 
     @Override
     public void update(PlaygroundPointData playgroundPoint, String[] params) {
+        // update the item
         playgroundPoint.setFId( Objects.requireNonNull( params[0], "fId cannot be null" ) );
         playgroundPoint.setObjectId( Integer.parseInt(Objects.requireNonNull( params[1], "ObjectId cannot be null" ) ) );
         playgroundPoint.setShape( Objects.requireNonNull( params[2] ) );
@@ -33,6 +34,7 @@ public class PlaygroundPointDaoMemory implements Dao<PlaygroundPointData> {
         playgroundPoint.setTypDetail( Objects.requireNonNull( params[6], "TypDetail cannot be null" ) );
         playgroundPoint.setSeAnnoCadData( params[7] );
 
+        // persist the updated item
         playgroundPoints.put( playgroundPoint.getObjectId(), playgroundPoint );
     }
 
