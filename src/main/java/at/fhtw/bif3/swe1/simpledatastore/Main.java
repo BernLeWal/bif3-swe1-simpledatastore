@@ -1,5 +1,6 @@
 package at.fhtw.bif3.swe1.simpledatastore;
 
+import at.fhtw.bif3.swe1.simpledatastore.dao.PlaygroundPointDaoDb;
 import at.fhtw.bif3.swe1.simpledatastore.datastores.*;
 import at.fhtw.bif3.swe1.simpledatastore.model.PlaygroundPointData;
 import at.fhtw.bif3.swe1.simpledatastore.model.PlaygroundPointRecord;
@@ -12,47 +13,51 @@ public class Main {
 
     public static final String DOWNLOAD_URL = "https://data.wien.gv.at/daten/geo?service=WFS&request=GetFeature&version=1.1.0&typeName=ogdwien:SPIELPLATZPUNKTOGD&srsName=EPSG:4326&outputFormat=csv";
 
-    private List<PlaygroundPointRecord> data;
-
-    public void run() {
+    public static void main(String[] args) {
         System.out.println("Init? [Y/n]");
         Scanner sc = new Scanner(System.in);
         var input = sc.nextLine();
         if ("y".equalsIgnoreCase(input)) {
-            loadDataFromWeb();
+            List<PlaygroundPointRecord> data = loadDataFromWeb();
+            //if( data!=null && data.size() > 0 ) {
+            //    DataStoreCsv dsCsv = new DataStoreCsv();
+            //    dsCsv.openWriteConsole();
+            //    dsCsv.write(data);
+            //}
 
-            writeDataToCsvFile();
-            writeDataToBinaryFile();
-            writeDataToObjectBinaryFile();
-            writeDataToJSONFile();
-            writeDataToXMLFile();
+            writeDataToCsvFile(data);
+            writeDataToBinaryFile(data);
+            writeDataToObjectBinaryFile(data);
+            writeDataToJSONFile(data);
+            writeDataToXMLFile(data);
+
+            PlaygroundPointDaoDb.initDb();
+            writeDataToDatabase(data);
         }
 
         System.out.println("Enter an object id: ");
         var searchObjectId = sc.nextInt();
 
-        readDataFromBinaryFile(searchObjectId);
-        //readDataFromObjectBinaryFile(searchObjectId);
-        //readDataFromJSONFile(searchObjectId);
-        //readDataFromXMLFile(searchObjectId);
+        //List<PlaygroundPointRecord> data = readDataFromBinaryFile(searchObjectId);
+        //List<PlaygroundPointRecord> data = readDataFromObjectBinaryFile(searchObjectId);
 
-        if( data!=null && data.size() > 0 ) {
-            DataStoreCsv dsCsv = new DataStoreCsv();
-            dsCsv.openWriteConsole();
-            dsCsv.write(data);
-        }
+        //List<PlaygroundPointData> data = readDataFromJSONFile(searchObjectId);
+        //List<PlaygroundPointData> data = readDataFromXMLFile(searchObjectId);
+
+        List<PlaygroundPointData> data = readDataFromDatabase(searchObjectId);
+        data.forEach( System.out::println );
     }
 
     /**
      * Loads austrian open data from the website, parses the data and serializes it in different formats
      * based on an internal mapping.
      */
-    private void loadDataFromWeb() {
+    private static List<PlaygroundPointRecord> loadDataFromWeb() {
         try {
             // HTTP: download file from https://www.data.gv.at/katalog/dataset/spielplatze-standorte-wien/resource/d7477bee-cfc3-45c0-96a1-5911e0ae122c
             DataStoreCsv dsCsv = new DataStoreCsv();
             dsCsv.openReadUrl(DOWNLOAD_URL);
-            data = dsCsv.read();
+            List<PlaygroundPointRecord> data = dsCsv.read();
 //            data.forEach(System.out::println);
 
             // Query with Stream-API
@@ -62,13 +67,15 @@ public class Main {
                     .collect(Collectors.toList());
             System.out.println("min objectid: " + Collections.min(objectIds));
             System.out.println("max objectid: " + Collections.max(objectIds));
+
+            return data;
         } catch (IOException e) {
             // IGNORED - I promise, I will enter the correct URL in den sourcecode
             throw new RuntimeException(e);
         }
     }
 
-    private void writeDataToCsvFile() {
+    private static void writeDataToCsvFile(List<PlaygroundPointRecord> data) {
         // File handling: preparation for databases (index file)
         try {
             DataStoreCsv dsCsv = new DataStoreCsv();
@@ -80,7 +87,7 @@ public class Main {
         }
     }
 
-    private void writeDataToBinaryFile() {
+    private static void writeDataToBinaryFile(List<PlaygroundPointRecord> data) {
         // File handling: preparation for databases (index file)
         try {
             DataStoreBinary dsBin = new DataStoreBinary();
@@ -93,7 +100,7 @@ public class Main {
         }
     }
 
-    private void writeDataToObjectBinaryFile() {
+    private static void writeDataToObjectBinaryFile(List<PlaygroundPointRecord> data) {
         // Object handling
         try {
             DataStoreObject dsObject = new DataStoreObject();
@@ -105,7 +112,7 @@ public class Main {
         }
     }
 
-    private void writeDataToJSONFile() {
+    private static void writeDataToJSONFile(List<PlaygroundPointRecord> data) {
         try {
             DataStoreJSON dsJSON = new DataStoreJSON();
             //dsJSON.openWriteConsole();
@@ -117,7 +124,7 @@ public class Main {
         }
     }
 
-    private void writeDataToXMLFile() {
+    private static void writeDataToXMLFile(List<PlaygroundPointRecord> data) {
         try {
             DataStoreXML dsXML = new DataStoreXML();
             dsXML.openWriteFile("custom.xml");
@@ -128,76 +135,97 @@ public class Main {
         }
     }
 
+    private static void writeDataToDatabase(List<PlaygroundPointRecord> data) {
+        PlaygroundPointDaoDb daoDb = new PlaygroundPointDaoDb();
+        for( PlaygroundPointRecord item : data ) {
+            System.out.println("  save item: " + item);
+            daoDb.save( new PlaygroundPointData(
+                    item.fId(),
+                    item.objectId(),
+                    item.shape(),
+                    item.anlName(),
+                    (item.bezirk()==null) ? 0 : item.bezirk(),
+                    item.spielplatzDetail(),
+                    item.typDetail(),
+                    item.seAnnoCadData()
+                    ) );
+        }
+    }
 
 
-    private void readDataFromBinaryFile(int searchObjectId) {
+
+    private static List<PlaygroundPointRecord> readDataFromBinaryFile(int searchObjectId) {
         try {
             DataStoreBinary dsBinary = new DataStoreBinary();
             dsBinary.openReadFile("custom.dat");
             dsBinary.openReadIndexFile("custom.idx.dat");
-            data = dsBinary.read(searchObjectId);
+            return dsBinary.read(searchObjectId);
         } catch (FileNotFoundException e) {
             // IGNORED - I swear I will use the correct filenames ;-)
             throw new RuntimeException(e);
         }
     }
 
-    private void readDataFromObjectBinaryFile(int searchObjectId) {
+    private static List<PlaygroundPointRecord> readDataFromObjectBinaryFile(int searchObjectId) {
         try {
             DataStoreObject dsObject = new DataStoreObject();
             dsObject.openReadFile("custom.obj");
-            data = dsObject.read();
+            List<PlaygroundPointRecord> data = dsObject.read();
 
             if( searchObjectId>0 ) {
                 data = data.stream().filter(item -> item.objectId().equals(searchObjectId)).collect(Collectors.toList());
             }
+            return data;
         } catch (FileNotFoundException e) {
             // IGNORED - I swear I will use the correct filenames ;-)
             throw new RuntimeException(e);
         }
     }
 
-    private void readDataFromJSONFile(int searchObjectId) {
+    private static List<PlaygroundPointData> readDataFromJSONFile(int searchObjectId) {
         try {
             DataStoreJSON dsJSON = new DataStoreJSON();
             dsJSON.openReadFile("custom.json");
 
-            List<PlaygroundPointData> data2 = dsJSON.readData();
+            List<PlaygroundPointData> data = dsJSON.readData();
             if( searchObjectId>0 ) {
-                data2 = data2.stream()
+                data = data.stream()
                         .filter(item -> item.getObjectId().equals(searchObjectId))
                         .collect(Collectors.toList());
             }
-            data2.forEach(System.out::println);
-            data = null;
+            return data;
         } catch (FileNotFoundException e) {
             // IGNORED - I swear I will use the correct filenames ;-)
             throw new RuntimeException(e);
         }
     }
 
-    private void readDataFromXMLFile(int searchObjectId) {
+    private static List<PlaygroundPointData> readDataFromXMLFile(int searchObjectId) {
         try {
             DataStoreXML dsXML = new DataStoreXML();
             dsXML.openReadFile("custom.xml");
 
-            List<PlaygroundPointData> data2 = dsXML.readData();
+            List<PlaygroundPointData> data = dsXML.readData();
             if( searchObjectId>0 ) {
-                data2 = data2.stream()
+                data = data.stream()
                         .filter(item -> item.getObjectId().equals(searchObjectId))
                         .collect(Collectors.toList());
             }
-            data2.forEach(System.out::println);
-            data = null;
+            return data;
         } catch (FileNotFoundException e) {
             // IGNORED - I swear I will use the correct filenames ;-)
             throw new RuntimeException(e);
         }
     }
 
+    private static List<PlaygroundPointData> readDataFromDatabase(int searchObjectId) {
+        PlaygroundPointDaoDb daoDb = new PlaygroundPointDaoDb();
+        ArrayList<PlaygroundPointData> data = new ArrayList<>();
+        if( searchObjectId>0 )
+            data.add( daoDb.get( searchObjectId ).orElse( null ) );
+        else
+            data.addAll( daoDb.getAll() );
 
-
-    public static void main(String[] args) {
-        new Main().run();
+        return data;
     }
 }
