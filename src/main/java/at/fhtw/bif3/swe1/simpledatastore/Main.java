@@ -6,6 +6,7 @@ import at.fhtw.bif3.swe1.simpledatastore.model.PlaygroundPointRecord;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -29,6 +30,7 @@ public class Main {
                 writeDataToObjectBinaryFile(data);
                 writeDataToJSONFile(data);
                 writeDataToXMLFile(data);
+                writeDataToDatabase(data);
             }
 
             System.out.println("Enter an object id: ");
@@ -44,9 +46,12 @@ public class Main {
             writeDataToConsoleData(readDataFromJSONFile(searchObjectId));
             writeHeadingToConsole("XML");
             writeDataToConsoleData(readDataFromXMLFile(searchObjectId));
+            writeHeadingToConsole("Database");
+            writeDataToCsvConsole(readDataFromDatabase(searchObjectId));
 
-        } catch (FileNotFoundException e) {
-            // IGNORED - I swear I will use the correct filenames ;-)
+
+        } catch (FileNotFoundException | SQLException e) {
+            // IGNORED - I swear I will use the correct filenames and databases ;-)
             return;
         }
     }
@@ -135,6 +140,13 @@ public class Main {
         dsXML.write(data);
     }
 
+    private static void writeDataToDatabase(List<PlaygroundPointRecord> data) throws SQLException {
+        DataStoreDatabase dsDatabase = new DataStoreDatabase();
+        dsDatabase.openConnection("jdbc:postgresql://localhost:5432/simpledatastore", "postgres", "postgres");
+        dsDatabase.write(data);
+        dsDatabase.closeConnection();
+    }
+
     private static List<PlaygroundPointRecord> filterRecordsForSearchObjectId(List<PlaygroundPointRecord> data, int searchObjectId) {
         if (searchObjectId > 0) {
             return data.stream()
@@ -184,5 +196,13 @@ public class Main {
         DataStoreXML dsXML = new DataStoreXML();
         dsXML.openReadFile("custom.xml");
         return filterDataForSearchObjectId(dsXML.readData(), searchObjectId);
+    }
+
+    private static List<PlaygroundPointRecord> readDataFromDatabase(int searchObjectId) throws SQLException {
+        DataStoreDatabase dsDatabase = new DataStoreDatabase();
+        dsDatabase.openConnection("jdbc:postgresql://localhost:5432/simpledatastore", "postgres", "postgres");
+        var data = dsDatabase.read(searchObjectId);
+        dsDatabase.closeConnection();
+        return data;
     }
 }
