@@ -2,10 +2,7 @@ package at.fhtw.bif3.swe1.simpledatastore.dao;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 public class DbConnection implements Closeable {
     private static DbConnection instance;
@@ -51,6 +48,10 @@ public class DbConnection implements Closeable {
     }
 
 
+    public PreparedStatement prepareStatement(String sql) throws SQLException {
+        return getConnection().prepareStatement(sql);
+    }
+
     public boolean executeSql(String sql) throws SQLException {
         return executeSql(getConnection(), sql, false);
     }
@@ -72,7 +73,7 @@ public class DbConnection implements Closeable {
 
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         if( connection!=null ) {
             try {
                 connection.close();

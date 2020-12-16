@@ -46,8 +46,7 @@ public class PlaygroundPointDaoDb implements Dao<PlaygroundPointData> {
 
     @Override
     public Optional<PlaygroundPointData> get(int id) {
-        Connection connection = DbConnection.getInstance().getConnection();
-        try ( PreparedStatement statement = connection.prepareStatement("""
+        try ( PreparedStatement statement = DbConnection.getInstance().prepareStatement("""
                 SELECT fid, objectid, shape, anlname, bezirk, spielplatzdetail, typdetail, seannocaddata 
                 FROM playgroundpoints 
                 WHERE objectid=?
@@ -76,8 +75,7 @@ public class PlaygroundPointDaoDb implements Dao<PlaygroundPointData> {
     @Override
     public Collection<PlaygroundPointData> getAll() {
         ArrayList<PlaygroundPointData> result = new ArrayList<>();
-        Connection connection = DbConnection.getInstance().getConnection();
-        try ( PreparedStatement statement = connection.prepareStatement("""
+        try ( PreparedStatement statement = DbConnection.getInstance().prepareStatement("""
                 SELECT fid, objectid, shape, anlname, bezirk, spielplatzdetail, typdetail, seannocaddata 
                 FROM playgroundpoints 
                 """)
@@ -103,8 +101,7 @@ public class PlaygroundPointDaoDb implements Dao<PlaygroundPointData> {
 
     @Override
     public void save(PlaygroundPointData playgroundPointData) {
-        Connection connection = DbConnection.getInstance().getConnection();
-        try ( PreparedStatement statement = connection.prepareStatement("""
+        try ( PreparedStatement statement = DbConnection.getInstance().prepareStatement("""
                 INSERT INTO playgroundpoints 
                 (fid, objectid, shape, anlname, bezirk, spielplatzdetail, typdetail, seannocaddata) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?);
@@ -137,8 +134,7 @@ public class PlaygroundPointDaoDb implements Dao<PlaygroundPointData> {
         playgroundPoint.setSeAnnoCadData( params[7] );
 
         // persist the updated item
-        Connection connection = DbConnection.getInstance().getConnection();
-        try ( PreparedStatement statement = connection.prepareStatement("""
+        try ( PreparedStatement statement = DbConnection.getInstance().prepareStatement("""
                 UPDATE playgroundpoints 
                 SET fid = ?, shape = ?, anlname = ?, bezirk = ?, spielplatzdetail = ?, typdetail = ?, seannocaddata = ? 
                 WHERE objectid = ?;
@@ -160,9 +156,7 @@ public class PlaygroundPointDaoDb implements Dao<PlaygroundPointData> {
 
     @Override
     public void delete(PlaygroundPointData playgroundPointData) {
-        Connection connection = DbConnection.getInstance().getConnection();
-        try (
-             PreparedStatement statement = connection.prepareStatement("""
+        try ( PreparedStatement statement = DbConnection.getInstance().prepareStatement("""
                 DELETE FROM playgroundpoints 
                 WHERE objectid = ?;
                 """)

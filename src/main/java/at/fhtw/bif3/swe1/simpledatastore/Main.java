@@ -1,5 +1,6 @@
 package at.fhtw.bif3.swe1.simpledatastore;
 
+import at.fhtw.bif3.swe1.simpledatastore.dao.DbConnection;
 import at.fhtw.bif3.swe1.simpledatastore.dao.PlaygroundPointDaoDb;
 import at.fhtw.bif3.swe1.simpledatastore.datastores.*;
 import at.fhtw.bif3.swe1.simpledatastore.model.PlaygroundPointData;
@@ -46,6 +47,8 @@ public class Main {
 
         List<PlaygroundPointData> data = readDataFromDatabase(searchObjectId);
         data.forEach( System.out::println );
+
+        DbConnection.getInstance().close();
     }
 
     /**
