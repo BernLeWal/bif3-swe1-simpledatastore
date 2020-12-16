@@ -11,41 +11,22 @@ import java.util.Optional;
 public class PlaygroundPointDaoDb implements Dao<PlaygroundPointData> {
 
     /**
-     * Loads the PostgreSql JDBC-driver
-     * Don't forget to add the dependency in the pom.xml, like
-     *         <dependency>
-     *             <groupId>org.postgresql</groupId>
-     *             <artifactId>postgresql</artifactId>
-     *             <version>42.2.18.jre7</version>
-     *         </dependency>
-     */
-    public PlaygroundPointDaoDb() {
-        try {
-            Class.forName("org.postgresql.Driver");
-        } catch (ClassNotFoundException e) {
-            System.err.println("PostgreSQL JDBC driver not found");
-            e.printStackTrace();
-        }
-
-    }
-
-    /**
      * initializes the database with its tables
      */
     // PostgreSQL documentation: https://www.postgresqltutorial.com/postgresql-create-table/
     public static void initDb() {
         // re-create the database
-        try (Connection connection = getConnection("")) {
-            executeSql(connection, "DROP DATABASE simpledatastore", true );
-            executeSql(connection,  "CREATE DATABASE simpledatastore", true );
+        try (Connection connection = DbConnection.getInstance().connect("")) {
+            DbConnection.executeSql(connection, "DROP DATABASE simpledatastore", true );
+            DbConnection.executeSql(connection,  "CREATE DATABASE simpledatastore", true );
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
 
         // create the table
         // PostgreSQL documentation: https://www.postgresqltutorial.com/postgresql-create-table/
-        try (Connection connection = getConnection()) {
-            executeSql(connection,  """
+        try {
+            DbConnection.getInstance().executeSql("""
                 CREATE TABLE IF NOT EXISTS PlaygroundPoints (
                     fId VARCHAR(50) NOT NULL,
                     objectId INT PRIMARY KEY, 
@@ -61,13 +42,12 @@ public class PlaygroundPointDaoDb implements Dao<PlaygroundPointData> {
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
-
     }
 
     @Override
     public Optional<PlaygroundPointData> get(int id) {
-        try (Connection connection = getConnection();
-            PreparedStatement statement = connection.prepareStatement("""
+        Connection connection = DbConnection.getInstance().getConnection();
+        try ( PreparedStatement statement = connection.prepareStatement("""
                 SELECT fid, objectid, shape, anlname, bezirk, spielplatzdetail, typdetail, seannocaddata 
                 FROM playgroundpoints 
                 WHERE objectid=?
@@ -96,8 +76,8 @@ public class PlaygroundPointDaoDb implements Dao<PlaygroundPointData> {
     @Override
     public Collection<PlaygroundPointData> getAll() {
         ArrayList<PlaygroundPointData> result = new ArrayList<>();
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement("""
+        Connection connection = DbConnection.getInstance().getConnection();
+        try ( PreparedStatement statement = connection.prepareStatement("""
                 SELECT fid, objectid, shape, anlname, bezirk, spielplatzdetail, typdetail, seannocaddata 
                 FROM playgroundpoints 
                 """)
@@ -123,8 +103,8 @@ public class PlaygroundPointDaoDb implements Dao<PlaygroundPointData> {
 
     @Override
     public void save(PlaygroundPointData playgroundPointData) {
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement("""
+        Connection connection = DbConnection.getInstance().getConnection();
+        try ( PreparedStatement statement = connection.prepareStatement("""
                 INSERT INTO playgroundpoints 
                 (fid, objectid, shape, anlname, bezirk, spielplatzdetail, typdetail, seannocaddata) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?);
@@ -157,8 +137,8 @@ public class PlaygroundPointDaoDb implements Dao<PlaygroundPointData> {
         playgroundPoint.setSeAnnoCadData( params[7] );
 
         // persist the updated item
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement("""
+        Connection connection = DbConnection.getInstance().getConnection();
+        try ( PreparedStatement statement = connection.prepareStatement("""
                 UPDATE playgroundpoints 
                 SET fid = ?, shape = ?, anlname = ?, bezirk = ?, spielplatzdetail = ?, typdetail = ?, seannocaddata = ? 
                 WHERE objectid = ?;
@@ -180,7 +160,8 @@ public class PlaygroundPointDaoDb implements Dao<PlaygroundPointData> {
 
     @Override
     public void delete(PlaygroundPointData playgroundPointData) {
-        try (Connection connection = getConnection();
+        Connection connection = DbConnection.getInstance().getConnection();
+        try (
              PreparedStatement statement = connection.prepareStatement("""
                 DELETE FROM playgroundpoints 
                 WHERE objectid = ?;
@@ -193,27 +174,4 @@ public class PlaygroundPointDaoDb implements Dao<PlaygroundPointData> {
         }
     }
 
-
-    private static Connection getConnection(String database) throws SQLException {
-        return DriverManager.getConnection("jdbc:postgresql://localhost:5432/" + database, "postgres", "");
-    }
-
-    private static Connection getConnection() throws SQLException {
-        return getConnection("simpledatastore");
-    }
-    
-    private static boolean executeSql(Connection connection, String sql, boolean ignoreIfFails) throws SQLException {
-        try ( Statement statement = connection.createStatement() ) {
-            statement.execute(sql );
-            return true;
-        } catch (SQLException e) {
-            if( !ignoreIfFails )
-                throw e;
-            return false;
-        }
-    }
-
-    private static boolean executeSql(Connection connection, String sql) throws SQLException {
-        return executeSql(connection, sql, false);
-    }
 }
